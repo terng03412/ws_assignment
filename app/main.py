@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 from os import getcwd
 from PIL import Image
 
-
 import numpy as np
 
 

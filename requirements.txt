@@ -10,4 +10,3 @@ pandas>=0.25.1
 scikit-learn>=0.23.2
 python-multipart>=0.0.2
 Pillow>=2.6.1
-pytorch-metric-learning>=1.6.3
