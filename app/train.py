@@ -19,8 +19,8 @@ print('Training on [{}].'.format(device))
 
 LEARNING_RATE = 1e-4
 REGULARIZATION = 1e-6
-BATCH_SIZE = 32
-EPOCH = 100
+BATCH_SIZE = 1
+EPOCH = 1
 
 
 def train(model, loss_func, mining_func, device, train_loader, optimizer, epoch):
@@ -40,8 +40,6 @@ def train(model, loss_func, mining_func, device, train_loader, optimizer, epoch)
                 )
             )
 
-
-device = torch.device("cuda")
 
 transform = transforms.Compose(
     [transforms.ToTensor()]
@@ -84,4 +82,4 @@ mining_func = miners.TripletMarginMiner(
 for epoch in range(1, num_epochs + 1):
     train(model, loss_func, mining_func, device,
           train_data_loader, optimizer, epoch)
-    # test(dataset1, dataset2, model, accuracy_calculator)
+#     # test(dataset1, dataset2, model, accuracy_calculator)

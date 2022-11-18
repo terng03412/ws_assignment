@@ -15,10 +15,10 @@ print('Training on [{}].'.format(device))
 
 def resnext50(out_planes, pretrained=False):
     if pretrained is True:
-        model = models.resnext50_32x4d(pretrained=True)
+        model = models.resnext50_32x4d(weights=True)
         print("Pretrained model is loaded")
     else:
-        model = models.resnext50_32x4d(pretrained=False)
+        model = models.resnext50_32x4d(weights=None)
     # Parameters of newly constructed modules have requires_grad=True by default
     model.fc = nn.Linear(model.fc.in_features, out_planes)
     return model
@@ -26,10 +26,10 @@ def resnext50(out_planes, pretrained=False):
 
 def mobilenet_v2(out_planes, pretrained=False):
     if pretrained is True:
-        model = models.mobilenet_v2(pretrained=True)
+        model = models.mobilenet_v2(weights=True)
         print("Pretrained model is loaded")
     else:
-        model = models.mobilenet_v2(pretrained=False)
+        model = models.mobilenet_v2(weights=None)
 
     # Parameters of newly constructed modules have requires_grad=True by default
     model.classifier[1] = nn.Linear(
