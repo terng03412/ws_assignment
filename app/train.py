@@ -13,10 +13,6 @@ from torch.utils import data
 from model import mobilenet_v2
 
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print('Training on [{}].'.format(device))
-
-
 LEARNING_RATE = 1e-4
 REGULARIZATION = 1e-6
 BATCH_SIZE = 32
@@ -41,7 +37,8 @@ def train(model, loss_func, mining_func, device, train_loader, optimizer, epoch)
             )
 
 
-device = torch.device("cuda")
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+print('Training on [{}].'.format(device))
 
 transform = transforms.Compose(
     [transforms.ToTensor()]
