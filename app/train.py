@@ -98,6 +98,7 @@ TRANSFORM_IMG = transforms.Compose([
     transforms.CenterCrop(224),
     transforms.ToTensor()
 ])
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 train_data = CelebDataset(csv_file=TRAIN_DATA_PATH,
                           train=True, transform=TRANSFORM_IMG)
