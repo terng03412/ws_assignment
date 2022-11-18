@@ -19,7 +19,7 @@ print('Training on [{}].'.format(device))
 
 LEARNING_RATE = 1e-4
 REGULARIZATION = 1e-6
-BATCH_SIZE = 1
+BATCH_SIZE = 4
 EPOCH = 1
 
 
@@ -64,8 +64,8 @@ test_data_loader = data.DataLoader(
     test_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
 
-model = mobilenet_v2(64).to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+model = mobilenet_v2(32).to(device)
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 num_epochs = 20
 
 
