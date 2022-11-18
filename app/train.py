@@ -1,83 +1,87 @@
-from dataset import create_dataset, Trainer
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from model import AttentionalFactorizationMachine
 import numpy as np
+
+from torchvision import transforms
+
+from pytorch_metric_learning import distances, losses, miners, reducers
+import torchvision
+from torch.utils import data
+
+from model import mobilenet_v2
 
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print('Training on [{}].'.format(device))
-dataset = create_dataset('lmwn', sample_num=100000,
-                         device=device, task="regression")
-field_dims, (train_X, train_y), (valid_X, valid_y), (test_X,
-                                                     test_y) = dataset.train_valid_test_split()
 
 
-EMBEDDING_DIM = 8
 LEARNING_RATE = 1e-4
 REGULARIZATION = 1e-6
-BATCH_SIZE = 4096
-EPOCH = 800
-TRIAL = 100
+BATCH_SIZE = 32
+EPOCH = 100
 
 
-afm = AttentionalFactorizationMachine(field_dims, EMBEDDING_DIM).to(device)
-if torch.cuda.device_count() > 1:
-    afm = nn.DataParallel(afm)
-# In `DataParallel` mode, it's to specify the leader to gather parameters
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-afm = afm.to(device)
-
-optimizer = optim.Adam(afm.parameters(), lr=LEARNING_RATE,
-                       weight_decay=REGULARIZATION)
-# criterion = nn.BCELoss()
-
-criterion = nn.MSELoss()
-
-trainer = Trainer(afm, optimizer, criterion, BATCH_SIZE, task='regression')
-trainer.summary()
-
-
-trainer.train(train_X, train_y, epoch=EPOCH, trials=TRIAL,
-              valid_X=valid_X, valid_y=valid_y)
-test_loss, test_auc = trainer.test(test_X, test_y)
-print('test_loss:  {:.5f} | test_auc:  {:.5f}'.format(test_loss, test_auc))
+def train(model, loss_func, mining_func, device, train_loader, optimizer, epoch):
+    model.train()
+    for batch_idx, (data, labels) in enumerate(train_loader):
+        data, labels = data.to(device), labels.to(device)
+        optimizer.zero_grad()
+        embeddings = model(data)
+        indices_tuple = mining_func(embeddings, labels)
+        loss = loss_func(embeddings, labels, indices_tuple)
+        loss.backward()
+        optimizer.step()
+        if batch_idx % 20 == 0:
+            print(
+                "Epoch {} Iteration {}: Loss = {}, Number of mined triplets = {}".format(
+                    epoch, batch_idx, loss, mining_func.num_triplets
+                )
+            )
 
 
-trainer.save('./files/model.h5')
+device = torch.device("cuda")
+
+transform = transforms.Compose(
+    [transforms.ToTensor()]
+)
+
+TRAIN_DATA_PATH = "/code/dataset/dataset/train"
+TEST_DATA_PATH = "/code/dataset/dataset/test"
+
+TRANSFORM_IMG = transforms.Compose([
+    transforms.Resize(224),
+    transforms.CenterCrop(224),
+    transforms.ToTensor()
+])
+
+train_data = torchvision.datasets.ImageFolder(
+    root=TRAIN_DATA_PATH, transform=TRANSFORM_IMG)
+train_data_loader = data.DataLoader(
+    train_data, batch_size=BATCH_SIZE, shuffle=True,  num_workers=4)
+test_data = torchvision.datasets.ImageFolder(
+    root=TEST_DATA_PATH, transform=TRANSFORM_IMG)
+test_data_loader = data.DataLoader(
+    test_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
 
-# for inference
-# user_encoder, res_encoder = dataset.encoder()
-# example
-# user_id = '549BB67D90E7982B'
-# res_id = '2CBF3C995B3EA080'
-# score = inference(user_encoder, res_encoder, trainer, user_id, res_id)
-# print(score)
-
-df_norm = dataset.get_norm_data()
-
-user_encoder, res_encoder = dataset.encoder()
-top_res = dataset.get_top_res()
-top_res_RID = list(set(top_res['RID']))
-user_topk = dict()
-
-for i in range(df_norm['UID'].max()):
-    user_pred_combi = []
-    for j in top_res_RID:
-        user_pred_combi.append([i, j])
-
-    res = trainer.inference(torch.tensor(user_pred_combi))
-    res = res.reshape(res.shape[0])
-    _, indexes = torch.topk(res, 10)
-    top_k_res = res_encoder.inverse_transform(
-        [top_res_RID[i] for i in indexes.tolist()])
-    user_topk[user_encoder.inverse_transform([i])[0]] = list(top_k_res)
+model = mobilenet_v2(64).to(device)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+num_epochs = 20
 
 
-np.save('./files/topk.npy', user_topk)
+### pytorch-metric-learning stuff ###
+distance = distances.CosineSimilarity()
+reducer = reducers.ThresholdReducer(low=0)
+loss_func = losses.TripletMarginLoss(
+    margin=0.2, distance=distance, reducer=reducer)
+mining_func = miners.TripletMarginMiner(
+    margin=0.2, distance=distance, type_of_triplets="semihard"
+)
 
-new_dict = np.load('./files/topk.npy', allow_pickle='TRUE').item()
 
-print(new_dict['0003E1FDB847FCE8'])
+for epoch in range(1, num_epochs + 1):
+    train(model, loss_func, mining_func, device,
+          train_data_loader, optimizer, epoch)
+    # test(dataset1, dataset2, model, accuracy_calculator)
