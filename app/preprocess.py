@@ -69,5 +69,5 @@ def create_test():
     df.to_csv('test_celeb.csv', index=False)
 
 
-# create_test()
-# create_train()
+create_test()
+create_train()

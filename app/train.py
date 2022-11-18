@@ -2,21 +2,12 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-
-from torchvision import transforms
-
-from pytorch_metric_learning import distances, losses, miners, reducers
 import torchvision
-from torch.utils import data
-
+from torchvision import transforms
+from torch.utils.data import DataLoader, Dataset
 import pandas as pd
 import numpy as np
-from torch.utils.data import DataLoader, Dataset
-
 from PIL import Image
-
-
 from model import mobilenet_v2
 
 
@@ -61,7 +52,7 @@ class CelebDataset(Dataset):
         negative_path = self.data.iloc[idx, 2]
 
         if train:
-            train_dir = '/code/dataset/dataset/train'
+            train_dir = '/code/dataset/dataset/train/'
             anchor_path = train_dir + \
                 anchor_path.split('-')[0] + '/' + anchor_path
             positive_path = train_dir + \
@@ -103,11 +94,8 @@ def train(model, loss_func, device, train_loader, optimizer, epoch):
             )
 
 
-# TRAIN_DATA_PATH = "/code/dataset/dataset/train"
-# TEST_DATA_PATH = "/code/dataset/dataset/test"
-
-TRAIN_DATA_PATH = "/content/drive/MyDrive/wisesight_data/train_celeb.csv"
-TEST_DATA_PATH = "/content/drive/MyDrive/wisesight_data/test_celeb.csv"
+TRAIN_DATA_PATH = "./train_celeb.csv"
+TEST_DATA_PATH = "./test_celeb.csv"
 
 TRANSFORM_IMG = transforms.Compose([
     transforms.Resize(224),
@@ -122,11 +110,8 @@ train_data_loader = DataLoader(
 
 model = mobilenet_v2(32).to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-num_epochs = 1
-
-
 triplet_loss = nn.TripletMarginLoss(margin=1.0, p=2)
 
 
-for epoch in range(1, num_epochs + 1):
+for epoch in range(1, EPOCH + 1):
     train(model, triplet_loss, device, train_data_loader, optimizer, epoch)
