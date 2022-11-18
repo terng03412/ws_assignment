@@ -5,9 +5,6 @@ from fastapi import FastAPI, UploadFile, File, BackgroundTasks
 from fastapi.responses import JSONResponse
 from os import getcwd
 from PIL import Image
-import preprocess
-import train
-
 
 import numpy as np
 
