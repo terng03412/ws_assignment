@@ -40,7 +40,7 @@ def create_train():
     df = pd.DataFrame({'anchor': anchor_list,
                        'positive': pos_list,
                        'negative': neg_list})
-    df.to_csv('train_celeb.csv', index=False)
+    df.to_csv('/code/app/files/train_celeb.csv', index=False)
 
 
 def create_test():
@@ -66,8 +66,8 @@ def create_test():
     df = pd.DataFrame({'anchor': anchor_list,
                        'positive': pos_list,
                        'negative': neg_list})
-    df.to_csv('test_celeb.csv', index=False)
+    df.to_csv('/code/app/files/test_celeb.csv', index=False)
 
 
-create_test()
-create_train()
+# create_test()
+# create_train()

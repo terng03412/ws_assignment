@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 import pandas as pd
 import numpy as np
 from PIL import Image
-from model import mobilenet_v2
+from model import mobilenet_v2, Net
 
 
 LEARNING_RATE = 1e-4
@@ -55,6 +55,14 @@ class CelebDataset(Dataset):
                 positive_path.split('-')[0] + '/' + positive_path
             negative_path = train_dir + \
                 negative_path.split('-')[0] + '/' + negative_path
+        else:
+            test_dir = '/code/dataset/dataset/test/'
+            anchor_path = test_dir + \
+                anchor_path.split('-')[0] + '/' + anchor_path
+            positive_path = test_dir + \
+                positive_path.split('-')[0] + '/' + positive_path
+            negative_path = test_dir + \
+                negative_path.split('-')[0] + '/' + negative_path
 
         anchor_img = Image.open(anchor_path)
         positive_img = Image.open(positive_path)
@@ -68,9 +76,10 @@ class CelebDataset(Dataset):
         return anchor_img, positive_img, negative_img
 
 
-def train(model, loss_func, device, train_loader, optimizer, epoch):
+def train(model, loss_func, device, train_loader, test_dataloader, optimizer, epoch):
     model.train()
 
+    min_loss = 100
     for batch_idx, (anchor_img, positive_img, negative_img) in enumerate(train_loader):
         anchor_img, positive_img, negative_img = anchor_img.to(
             device), positive_img.to(device), negative_img.to(device)
@@ -88,27 +97,78 @@ def train(model, loss_func, device, train_loader, optimizer, epoch):
                     epoch, batch_idx, loss
                 )
             )
+            STATE_PATH = "/code/app/files/model_state_" + \
+                str(epoch) + ".pt"
+            torch.save(model.state_dict(), STATE_PATH)
+
+    model.eval()
+
+    for batch_idx, (anchor_img, positive_img, negative_img) in enumerate(test_dataloader):
+        anchor_img, positive_img, negative_img = anchor_img.to(
+            device), positive_img.to(device), negative_img.to(device)
+
+        anchor = model(anchor_img)
+        pos = model(positive_img)
+        neg = model(negative_img)
+        loss = loss_func(anchor, pos, neg)
+        if (float(loss)) < min_loss:
+            min_loss = (float(loss))
+            PATH = "/code/app/files/model_" + \
+                str(epoch) + ".pt"
+            torch.save(model, PATH)
+
+        if batch_idx % 20 == 0:
+            print(
+                "Epoch {} Iteration {}: Loss = {}".format(
+                    epoch, batch_idx, loss
+                )
+            )
+
+    return model
 
 
-TRAIN_DATA_PATH = "./train_celeb.csv"
-TEST_DATA_PATH = "./test_celeb.csv"
+TRAIN_DATA_PATH = "/code/app/files/train_celeb.csv"
+TEST_DATA_PATH = "/code/app/files/test_celeb.csv"
 
 TRANSFORM_IMG = transforms.Compose([
     transforms.Resize(224),
     transforms.CenterCrop(224),
     transforms.ToTensor()
 ])
+
+
+TRANSFORM_IMG = transforms.Compose([
+    transforms.Resize(128),
+    transforms.CenterCrop(128),
+    transforms.ToTensor()
+])
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 train_data = CelebDataset(csv_file=TRAIN_DATA_PATH,
                           train=True, transform=TRANSFORM_IMG)
-train_data_loader = DataLoader(
+
+test_data = CelebDataset(csv_file=TEST_DATA_PATH,
+                         train=False, transform=None)
+
+train_dataloader = DataLoader(
     train_data, batch_size=BATCH_SIZE, shuffle=True,  num_workers=4)
 
+test_dataloader = DataLoader(
+    test_data, batch_size=BATCH_SIZE, shuffle=True,  num_workers=4)
+
 model = mobilenet_v2(32).to(device)
+model = Net(128).to(device)
+
+try:
+    model = torch.load("/code/app/files/model.pt")
+except:
+    print("Could not load model")
+
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 triplet_loss = nn.TripletMarginLoss(margin=1.0, p=2)
 
 
 for epoch in range(1, EPOCH + 1):
-    train(model, triplet_loss, device, train_data_loader, optimizer, epoch)
+    model = train(model, triplet_loss, device,
+                  train_dataloader, test_dataloader, optimizer, epoch)

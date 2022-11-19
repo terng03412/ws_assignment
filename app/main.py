@@ -6,6 +6,10 @@ from fastapi.responses import JSONResponse
 from os import getcwd
 from PIL import Image
 
+from .train_model import train
+
+from .preprocess import create_test, create_train
+
 import numpy as np
 
 
@@ -76,6 +80,23 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File
             "success": False,
             "account": ""
         }
+
+
+@app.post("/preprocess")
+async def preprocess():
+    create_train()
+    create_test()
+    return {
+        "success": True
+    }
+
+
+# @app.post("/train")
+# async def train():
+#     train()
+#     return {
+#         "success": True
+#     }
 
 
 @ app.get("/")
