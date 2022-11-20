@@ -13,6 +13,9 @@ from .preprocess import create_test, create_train
 import numpy as np
 
 
+import json
+
+
 def resize_image(filename: str):
     sizes = [{
         "width": 1280,
@@ -52,6 +55,10 @@ app.add_middleware(
 
 PATH_FILES = getcwd() + "/app/uploadedImages/"
 
+name_dict = dict()
+with open('/code/dataset/accounts.json', 'r') as f:
+    name_dict = json.load(f)
+
 
 @app.post("/recognize")
 async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
@@ -71,10 +78,12 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File
     # print('width: ', w)
     # print('height:', h)
     embedded_path = '/code/app/files/'
+    embedded_path = '/code/dataset/'
 
     try:
 
         ans = predict(embedded_path, test_image_path)[1]
+        ans = name_dict[str(ans)]
 
         return {
             "success": True,

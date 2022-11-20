@@ -34,7 +34,9 @@ def create_embedded(output_path, dir_path, model):
     count = 0.0
     length = len(train_files)
     for f in train_files:
-        print("processing : " + str(100*count/length) + "%")
+
+        if count % 50 == 0:
+            print("processing : " + str(100*count/length) + "%")
         count += 1
         class_name = f
         images = os.listdir(dir_path+f)
@@ -98,7 +100,8 @@ def train_labels():
     model.to(device)
     print('load model')
 
-    out_p = '/code/app/files/'
+    # out_p = '/code/app/files/'
+    out_p = '/code/dataset/'
     dir_path = '/code/dataset/dataset/train/'
     print('create_embedded')
     create_embedded(out_p, dir_path, model)
