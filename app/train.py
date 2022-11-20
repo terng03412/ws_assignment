@@ -32,6 +32,7 @@ class CelebDataset(Dataset):
 
         self._num_of_classes = 526
         self._len_of_dataset = len(self.data)
+        self._train = train
 
     def get_num_of_classes(self):
         return self._num_of_classes
@@ -47,7 +48,7 @@ class CelebDataset(Dataset):
         positive_path = self.data.iloc[idx, 1]
         negative_path = self.data.iloc[idx, 2]
 
-        if train:
+        if self._train:
             train_dir = '/code/dataset/dataset/train/'
             anchor_path = train_dir + \
                 anchor_path.split('-')[0] + '/' + anchor_path
@@ -77,8 +78,8 @@ class CelebDataset(Dataset):
 
 
 def train(model, loss_func, device, train_loader, test_dataloader, optimizer, epoch):
-    model.train()
 
+    model.train()
     min_loss = 100
     for batch_idx, (anchor_img, positive_img, negative_img) in enumerate(train_loader):
         anchor_img, positive_img, negative_img = anchor_img.to(
@@ -97,9 +98,14 @@ def train(model, loss_func, device, train_loader, test_dataloader, optimizer, ep
                     epoch, batch_idx, loss
                 )
             )
-            STATE_PATH = "/code/app/files/model_state_" + \
-                str(epoch) + ".pt"
-            torch.save(model.state_dict(), STATE_PATH)
+
+    STATE_PATH = "/code/app/files/model_mobilenet_state_" + \
+        str(epoch) + ".pt"
+    torch.save(model.state_dict(), STATE_PATH)
+
+    STATE_PATH = "/code/dataset/model_mobilenet_state_" + \
+        str(epoch) + ".pt"
+    torch.save(model.state_dict(), STATE_PATH)
 
     model.eval()
 
@@ -111,11 +117,14 @@ def train(model, loss_func, device, train_loader, test_dataloader, optimizer, ep
         pos = model(positive_img)
         neg = model(negative_img)
         loss = loss_func(anchor, pos, neg)
+
         if (float(loss)) < min_loss:
             min_loss = (float(loss))
             PATH = "/code/app/files/model_" + \
                 str(epoch) + ".pt"
             torch.save(model, PATH)
+            if min_loss == 0:
+                min_loss += 1
 
         if batch_idx % 20 == 0:
             print(
@@ -144,6 +153,7 @@ TRANSFORM_IMG = transforms.Compose([
 ])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print('Training on [{}].'.format(device))
 
 train_data = CelebDataset(csv_file=TRAIN_DATA_PATH,
                           train=True, transform=TRANSFORM_IMG)
@@ -165,7 +175,7 @@ try:
 except:
     print("Could not load model")
 
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 triplet_loss = nn.TripletMarginLoss(margin=1.0, p=2)
 
 

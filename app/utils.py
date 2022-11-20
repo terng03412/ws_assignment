@@ -31,7 +31,10 @@ def embedded(model, image_path):
 def create_embedded(output_path, dir_path, model):
     embedded_dict = dict()
     train_files = os.listdir(dir_path)
+    count = 0.0
+    length = len(train_files)
     for f in train_files:
+        print("processing : " + str(100*count/length) + "%")
         class_name = f
         images = os.listdir(dir_path+f)
         path = dir_path + '/' + str(f) + '/'
@@ -92,9 +95,8 @@ model.load_state_dict(torch.load(STATE_PATH, map_location=torch.device('cpu')))
 model.to(device)
 print('load model')
 
-
 out_p = '/code/app/files/'
-dir_path = '/code/dataset/dataset/test/'
+dir_path = '/code/dataset/dataset/train/'
 print('create_embedded')
 create_embedded(out_p, dir_path, model)
 
