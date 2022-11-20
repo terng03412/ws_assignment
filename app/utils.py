@@ -35,6 +35,7 @@ def create_embedded(output_path, dir_path, model):
     length = len(train_files)
     for f in train_files:
         print("processing : " + str(100*count/length) + "%")
+        count += 1
         class_name = f
         images = os.listdir(dir_path+f)
         path = dir_path + '/' + str(f) + '/'

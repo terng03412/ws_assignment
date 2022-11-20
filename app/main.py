@@ -49,7 +49,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-PATH_FILES = getcwd() + "/" + 'uploadedImages' + '/'
+
+PATH_FILES = getcwd() + "/app/uploadedImages/"
 
 
 @app.post("/recognize")
@@ -70,6 +71,7 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File
     # print('width: ', w)
     # print('height:', h)
     embedded_path = '/code/app/files/'
+
     try:
 
         ans = predict(embedded_path, test_image_path)[1]
