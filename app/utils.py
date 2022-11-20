@@ -5,7 +5,7 @@ from torchvision import transforms
 from PIL import Image
 import torch
 import torch.nn as nn
-from model import mobilenet_v2, Net
+from .model import mobilenet_v2, Net
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -88,21 +88,35 @@ def cal_similarity(distance_dict, image_path, model):
     return distance
 
 
-model = Net(128)
+def train_labels():
 
-STATE_PATH = "/code/app/files/model_state.pt"
-model.load_state_dict(torch.load(STATE_PATH, map_location=torch.device('cpu')))
-model.to(device)
-print('load model')
+    model = Net(128)
+    STATE_PATH = "/code/app/files/model_state.pt"
+    model.load_state_dict(torch.load(
+        STATE_PATH, map_location=torch.device('cpu')))
+    model.to(device)
+    print('load model')
 
-out_p = '/code/app/files/'
-dir_path = '/code/dataset/dataset/train/'
-print('create_embedded')
-create_embedded(out_p, dir_path, model)
+    out_p = '/code/app/files/'
+    dir_path = '/code/dataset/dataset/train/'
+    print('create_embedded')
+    create_embedded(out_p, dir_path, model)
+    print('create_embedded to ', out_p)
 
-embedded = load_embedded_dict(out_p + 'embedded_all.npy')
-test_image = '/code/dataset/dataset/val/10108319/10108319-00015.jpg'
 
-print('cal_similarity')
-d = cal_similarity(embedded, test_image, model)
-print(min(d, key=d.get), max(d, key=d.get))
+def predict(embedded_path, test_image_path):
+    # embedded_path = out_p
+    model = Net(128)
+    STATE_PATH = "/code/app/files/model_state.pt"
+    model.load_state_dict(torch.load(
+        STATE_PATH, map_location=torch.device('cpu')))
+    model.to(device)
+    print('load model')
+
+    embedded = load_embedded_dict(embedded_path + 'embedded_all.npy')
+    # test_image = '/code/dataset/dataset/val/10108319/10108319-00015.jpg'
+
+    print('cal_similarity')
+    d = cal_similarity(embedded, test_image_path, model)
+    print(min(d, key=d.get), max(d, key=d.get))
+    return (min(d, key=d.get), max(d, key=d.get))

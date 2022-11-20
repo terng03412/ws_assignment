@@ -7,7 +7,7 @@ from os import getcwd
 from PIL import Image
 
 from .train_model import train
-
+from .utils import train_labels, predict
 from .preprocess import create_test, create_train
 
 import numpy as np
@@ -61,19 +61,22 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File
         myfile.write(content)
         myfile.close()
 
+    test_image_path = PATH_FILES + file.filename
     # RESIZE IMAGES
-    background_tasks.add_task(resize_image, filename=file.filename)
+    # background_tasks.add_task(resize_image, filename=file.filename)
 
-    image = Image.open(PATH_FILES + file.filename, mode="r")
-    w, h = image.size
-    print('width: ', w)
-    print('height:', h)
-
+    # image = Image.open(PATH_FILES + file.filename, mode="r")
+    # w, h = image.size
+    # print('width: ', w)
+    # print('height:', h)
+    embedded_path = '/code/app/files/'
     try:
-        ans = 1
+
+        ans = predict(embedded_path, test_image_path)[1]
+
         return {
             "success": True,
-            "account": str(ans) + str(w) + ' , ' + str(h)
+            "account": str(ans)
         }
     except Exception:
         return {
@@ -91,12 +94,12 @@ async def preprocess():
     }
 
 
-# @app.post("/train")
-# async def train():
-#     train()
-#     return {
-#         "success": True
-#     }
+@app.post("/train")
+async def train():
+    train_labels()
+    return {
+        "success": True
+    }
 
 
 @ app.get("/")
