@@ -1,5 +1,6 @@
 # 
-FROM python:3.9
+# FROM python:3.9
+FROM nvidia/cuda:11.2.2-cudnn8-devel-ubuntu20.04
 
 # 
 WORKDIR /code
@@ -8,7 +9,9 @@ WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 
 # 
-RUN pip install --upgrade pip
+RUN apt update
+RUN apt install -y git libsndfile1-dev python3 python3-pip
+RUN python3 -m pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 
