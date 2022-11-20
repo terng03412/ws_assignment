@@ -49,7 +49,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-PATH_FILES = getcwd() + "/"
+PATH_FILES = getcwd() + "/" + 'uploadedImages' + '/'
 
 
 @app.post("/recognize")
