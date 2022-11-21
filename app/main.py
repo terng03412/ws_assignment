@@ -80,9 +80,14 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File
     embedded_path = '/code/app/files/'
     embedded_path = '/code/dataset/'
 
+    (ans, sorted_dict) = predict(embedded_path, test_image_path)
+    print(sorted_dict)
+    ans = name_dict[str(ans)]
+
     try:
 
-        ans = predict(embedded_path, test_image_path)[1]
+        (ans, sorted_dict) = predict(embedded_path, test_image_path)
+        print(sorted_dict)
         ans = name_dict[str(ans)]
 
         return {

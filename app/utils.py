@@ -72,11 +72,13 @@ def cal_similarity(distance_dict, image_path, model):
     output = output.cpu()
     distance = dict()
     count = dict()
+    names = set()
 
     for i in distance_dict:
         name = i.split('-')[0]
-        distance[name] = 0
-        count[name] = 0
+        distance[name] = 0.0
+        count[name] = 0.0
+        names.add(name)
 
     for i in distance_dict:
         name = i.split('-')[0]
@@ -85,9 +87,12 @@ def cal_similarity(distance_dict, image_path, model):
         distance[name] += float(dis)
         count[name] += 1.0
 
-    for i in distance_dict:
-        name = i.split('-')[0]
-        distance[name] = distance[name]/count[name]
+    for i in names:
+        distance[i] = distance[i]/count[i]
+
+    # for i in distance_dict:
+    #     name = i.split('-')[0]
+    #     distance[name] = distance[name]/count[name]
 
     return distance
 
@@ -123,6 +128,7 @@ def predict(embedded_path, test_image_path):
 
     print('cal_similarity')
     d = cal_similarity(embedded, test_image_path, model)
-    print(d)
-    print(min(d, key=d.get), max(d, key=d.get))
-    return (min(d, key=d.get), max(d, key=d.get))
+    sorted_dict = dict(
+        sorted(d.items(), key=lambda x: x[1], reverse=True)[:10])
+    # print(min(d, key=d.get), max(d, key=d.get))
+    return (max(d, key=d.get), sorted_dict)
