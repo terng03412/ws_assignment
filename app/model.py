@@ -88,4 +88,32 @@ class Net(nn.Module):
         return x
 
 
-model = Net(128).to(device)
+# Create a neural net class
+class Net2(nn.Module):
+
+    def __init__(self, num_classes=3):
+        super(Net2, self).__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels=3, out_channels=12, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(
+            in_channels=12, out_channels=24, kernel_size=3, stride=1, padding=1)
+        self.pool = nn.MaxPool2d(kernel_size=2)
+        self.drop = nn.Dropout2d(p=0.2)
+        self.fc = nn.Linear(in_features=32 * 32 * 24, out_features=1024)
+        self.fc2 = nn.Linear(in_features=1024, out_features=512)
+        self.fc3 = nn.Linear(in_features=512, out_features=num_classes)
+
+    def forward(self, x):
+
+        x = F.relu(self.pool(self.conv1(x)))
+        x = F.relu(self.pool(self.conv2(x)))
+        x = F.dropout(self.drop(x), training=self.training)
+
+        x = x.view(-1, 32 * 32 * 24)
+        x = self.fc(x)
+        x = self.fc2(x)
+        x = self.fc3(x)
+        return x
+
+
+model = Net2(128).to(device)

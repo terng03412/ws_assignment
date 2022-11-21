@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 import pandas as pd
 import numpy as np
 from PIL import Image
-from .model import mobilenet_v2, Net
+from .model import mobilenet_v2, Net, Net2
 
 
 LEARNING_RATE = 1e-4
@@ -32,6 +32,7 @@ class CelebDataset(Dataset):
 
         self._num_of_classes = 526
         self._len_of_dataset = len(self.data)
+        self._train = train
 
     def get_num_of_classes(self):
         return self._num_of_classes
@@ -47,7 +48,7 @@ class CelebDataset(Dataset):
         positive_path = self.data.iloc[idx, 1]
         negative_path = self.data.iloc[idx, 2]
 
-        if train:
+        if self._train:
             train_dir = '/code/dataset/dataset/train/'
             anchor_path = train_dir + \
                 anchor_path.split('-')[0] + '/' + anchor_path

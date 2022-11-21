@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 import pandas as pd
 import numpy as np
 from PIL import Image
-from model import mobilenet_v2, Net
+from model import mobilenet_v2, Net, Net2
 
 
 LEARNING_RATE = 1e-4
@@ -168,10 +168,10 @@ test_dataloader = DataLoader(
     test_data, batch_size=BATCH_SIZE, shuffle=True,  num_workers=4)
 
 model = mobilenet_v2(32).to(device)
-model = Net(128).to(device)
+model = Net2(128).to(device)
 
 try:
-    model = torch.load("/code/app/files/model.pt")
+    model.load_state_dict(torch.load("/code/app/files/model_state.pt"))
 except:
     print("Could not load model")
 

@@ -5,7 +5,7 @@ from torchvision import transforms
 from PIL import Image
 import torch
 import torch.nn as nn
-from .model import mobilenet_v2, Net
+from .model import mobilenet_v2, Net2
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -86,6 +86,7 @@ def cal_similarity(distance_dict, image_path, model):
         count[name] += 1.0
 
     for i in distance_dict:
+        name = i.split('-')[0]
         distance[name] = distance[name]/count[name]
 
     return distance
@@ -93,7 +94,7 @@ def cal_similarity(distance_dict, image_path, model):
 
 def train_labels():
 
-    model = Net(128)
+    model = Net2(128)
     STATE_PATH = "/code/app/files/model_state.pt"
     model.load_state_dict(torch.load(
         STATE_PATH, map_location=torch.device('cpu')))
@@ -110,7 +111,7 @@ def train_labels():
 
 def predict(embedded_path, test_image_path):
     # embedded_path = out_p
-    model = Net(128)
+    model = Net2(128)
     STATE_PATH = "/code/app/files/model_state.pt"
     model.load_state_dict(torch.load(
         STATE_PATH, map_location=torch.device('cpu')))
@@ -122,5 +123,6 @@ def predict(embedded_path, test_image_path):
 
     print('cal_similarity')
     d = cal_similarity(embedded, test_image_path, model)
+    print(d)
     print(min(d, key=d.get), max(d, key=d.get))
     return (min(d, key=d.get), max(d, key=d.get))
